@@ -5,32 +5,99 @@ async function main() {
     const trackingMap: boolean[][] = [[ true ]];
     const instructions = await getInstructions(input);
 
-    for(const instruction of instructions){
-
+    let positions = {
+        head: { x: 0, y: 0 },
+        tail: { x: 0, y: 0 },
     }
+
+    for(const instruction of instructions){
+        move(trackingMap, positions, instruction.move, instruction.count);
+    }
+
+    console.log(countMap(trackingMap));
 
     return;
 }
 
-function move(trackingMap: boolean[][], direction: string, count: number): void{
+function countMap(trackingMap){
+    let count = 0;
+    for(let y = 0; y < trackingMap.length; y++)
+        for(let x = 0; x < trackingMap[y].length; x++)
+            if(trackingMap[y][x]) count++;
+
+    return count;
+}
+
+interface Positions{
+    head: { x: number; y: number;};
+    tail: { x: number; y: number;};
+}
+
+function move(trackingMap: boolean[][], positions: Positions, direction: string, count: number): void{
+    if(count <= 0) return;
+
     switch(direction){
         case 'R':
-
+            //if tail is up or down from head, don't move
+            if(
+                positions.tail.y !== (positions.head.y + 1)
+                && positions.tail.y !== (positions.head.y - 1)
+            ){
+                // If same spot, don't move tail
+                if(positions.tail.x !== positions.head.x && positions.tail.y !== positions.head.y)
+                    positions.tail.x++;
+                positions.head.x++;
+            }
             break;
         case 'L':
+            //if tail is up or down from head, don't move
+            if(
+                positions.tail.y !== (positions.head.y + 1)
+                && positions.tail.y !== (positions.head.y - 1)
+            ){
+                if(positions.tail.x !== positions.head.x && positions.tail.y !== positions.head.y)
+                    positions.tail.x--;
+                positions.head.x--;
+            }
             break;
         case 'U':
+            //if tail is right or left from head
+            if(
+                positions.tail.x !== (positions.head.x + 1)
+                && positions.tail.x !== (positions.head.x - 1)
+            ){
+                if(positions.tail.x !== positions.head.x && positions.tail.y !== positions.head.y)
+                    positions.tail.y--;
+                positions.head.y--;
+
+            }
             //should be inverse for array
             break;
         case 'D':
-            //should be inverse for array
+            //if tail is right of left from head
+            if(
+                positions.tail.x !== (positions.head.x + 1)
+                && positions.tail.x !== (positions.head.x - 1)
+            ){
+                if(positions.tail.x !== positions.head.x && positions.tail.y !== positions.head.y)
+                    positions.tail.y++;
+                positions.head.y++;
+            }
             break;
     }
-    if(count > 0) return move(trackingMap, direction, count--);
-    else return;
-}
 
-function moveHead(){}
+    if(trackingMap.length <= positions.tail.y)
+        while(trackingMap.length < positions.tail.y) 
+            trackingMap.push([])
+    
+    if(trackingMap[positions.tail.y].length <= positions.tail.x) 
+        while(trackingMap[positions.tail.y].length <= positions.tail.x) 
+            trackingMap[positions.tail.y].push(false);
+
+    trackingMap[positions.tail.y][positions.tail.x] = true;
+    return move(trackingMap, positions, direction, count--);
+
+}
 
 async function getInstructions(input): Promise<{move: string; count: number}[]> {
     let instructions: {move: string; count: number}[] = [];
